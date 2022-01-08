@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,7 +49,7 @@ public class UsuarioController {
 		return ResponseEntity.ok(usuarioRepository.findAll());
 	}
 	
-	@GetMapping("/{id}")
+	@GetMapping("/detail/{id}")
 	public ResponseEntity<Usuario> getUsuarioById(@PathVariable(value = "id") Long usuarioId)
 			throws ResourceNotFoundException {
 		Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -75,15 +74,22 @@ public class UsuarioController {
 		
 	}
 	
-	@PutMapping("/update/{id}")
-	public ResponseEntity<Usuario> updateUsuario(@PathVariable(value = "id") Long usuarioId,
-			@Validated @RequestBody Usuario usuarioDetails) throws ResourceNotFoundException {
-		Usuario usuario = usuarioRepository.findById(usuarioId)
-				.orElseThrow(() -> new ResourceNotFoundException("Usuario no funciona para este id :: " + usuarioId));
+	@PostMapping("/update")
+	public restResponse update(@RequestBody String usuarioJson)
+			throws JsonMappingException, JsonProcessingException, octanExcepcion {
+		this.mapper = new ObjectMapper();
 
-		usuario.setNombre(usuarioDetails.getNombre());
-		final Usuario updateUsuario = usuarioRepository.save(usuario);
-		return ResponseEntity.ok(updateUsuario);
+		Usuario usuario = this.mapper.readValue(usuarioJson, Usuario.class);
+
+		if (!usuarioRepository.existsById(usuario.getId())) {
+			return new restResponse(HttpStatus.NOT_FOUND.value(), "No existe el usuario en la base de datos");
+		}
+
+		if (!this.validate(usuario)) {
+			return new restResponse(HttpStatus.NOT_ACCEPTABLE.value(), "Campo obligatorio sin diligenciar");
+		}
+		this.usuarioRepository.save(usuario);
+		return new restResponse(HttpStatus.OK.value(), "Usuario actualizo con exito");
 	}
 
 	@DeleteMapping("/delete/{id}")
