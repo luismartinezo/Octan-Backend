@@ -39,7 +39,7 @@ public class RolController {
 		return ResponseEntity.ok(rolRepository.findAll());
 	}
 
-	@GetMapping("/{id}")
+	@GetMapping("detail/{id}")
 	public ResponseEntity<Rol> getRolById(@PathVariable(value = "id") Long rolId) throws ResourceNotFoundException {
 		Rol rol = rolRepository.findById(rolId)
 				.orElseThrow(() -> new ResourceNotFoundException("Rol no funciona para el id :: " + rolId));
